@@ -50,7 +50,8 @@ export class SettingsWindow {
             {
                 gpt24: "GPT-24",
                 openai: "OpenAI",
-                mulai: 'Mulai'
+                mulai: 'Mulai',
+                gptchatbotru: 'GPT-ChatbotRU'
             },
             'gpt24',
             () => {
@@ -85,7 +86,7 @@ export class SettingsWindow {
         this.updateApiKeyVisibility = () => {
             const provider = this.configManager.getValue('provider');
             apiKeyRow.classList.toggle('hidden', provider !== 'openai');
-            corsKeyRow.classList.toggle('hidden', provider !== 'mulai');
+            corsKeyRow.classList.toggle('hidden', !['mulai', 'gptchatbotru'].includes(provider));
         };
 
         // Language selection
@@ -263,10 +264,15 @@ export class SettingsWindow {
     }
 
     updateApiKeyVisibility() {
+        const provider = this.configManager.getValue('provider');
         const apiKeyRow = this.window.getElement('openaiApiKey')?.parentElement;
+        const corsKeyRow = this.window.getElement('corsApiKey')?.parentElement;
+        
         if (apiKeyRow) {
-            apiKeyRow.classList.toggle('hidden', 
-                this.configManager.getValue('provider') !== 'openai');
+            apiKeyRow.classList.toggle('hidden', provider !== 'openai');
+        }
+        if (corsKeyRow) {
+            corsKeyRow.classList.toggle('hidden', !['mulai', 'gptchatbotru'].includes(provider));
         }
     }
 } 

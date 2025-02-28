@@ -3,6 +3,7 @@ import { ConfigManager } from './config';
 import { GPT24Provider } from './providers/gpt24';
 import { OpenAIProvider } from './providers/openai';
 import { MulaiProvider } from './providers/mulai';
+import { GPTChatbotRUProvider } from './providers/gpt-chatbotru';
 
 (function() {
     "use strict";
@@ -18,6 +19,8 @@ import { MulaiProvider } from './providers/mulai';
                 return new OpenAIProvider();
             case 'mulai':
                 return new MulaiProvider();
+            case 'gptchatbotru':
+                return new GPTChatbotRUProvider();
             case 'gpt24':
             default:
                 return new GPT24Provider();

@@ -16,8 +16,10 @@ This is a user script for solving questions on Naurok.com.ua.
 
 # Features
 - Solves all questions in the test
-- Allows to select the provider (GPT-24 or OpenAI)
-- Allows to select the language (English or Ukrainian)
-- Allows to configure the auto click delay for less suspicious behavior
-- Allows to enable correct answers highlighting for easier review
-- Allows to copy the question or google it
+- Multiple AI providers supported (GPT-24, OpenAI)
+- Language selection (English, Ukrainian)
+- Configurable auto click delay for natural behavior
+- Highlight correct answers for easy review
+- Copy or Google search questions
+- Model selection between GPT-24 and OpenAI
+- Auto click delay customization
