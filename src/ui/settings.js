@@ -54,6 +54,24 @@ export class SettingsWindow {
         apiKeyRow.classList.toggle('hidden', 
             this.configManager.getValue('provider') !== 'openai');
 
+        // CORS API Key
+        const corsKeyRow = this.window.addPasswordInput('corsApiKey',
+            'CORS.SH API Key',
+            '',
+            'temp_...'
+        );
+        
+        // Set initial visibility of CORS key field
+        corsKeyRow.classList.toggle('hidden', 
+            this.configManager.getValue('provider') !== 'mulai');
+
+        // Update visibility of both API key fields when provider changes
+        this.updateApiKeyVisibility = () => {
+            const provider = this.configManager.getValue('provider');
+            apiKeyRow.classList.toggle('hidden', provider !== 'openai');
+            corsKeyRow.classList.toggle('hidden', provider !== 'mulai');
+        };
+
         // Language selection
         this.window.addSelect('locale',
             this.i18n.t('settings.language'),

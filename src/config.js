@@ -12,7 +12,8 @@ export class ConfigManager {
             highlightDuration: 2000,
             locale: 'en_US',
             provider: 'gpt24',
-            openaiApiKey: ''
+            openaiApiKey: '',
+            corsApiKey: ''
         };
 
         this.initConfig();

@@ -1,9 +1,8 @@
 import { BaseProvider } from './base';
 
-export class GPT24Provider extends BaseProvider {
+export class MulaiProvider extends BaseProvider {
     constructor(letters) {
         super(letters);
-        this.userId = `#/chat/${Date.now()}`;
         this.systemMessage = `You are an AI assistant helping with test questions.
 
 Instructions:
@@ -32,11 +31,11 @@ Remember:
 - Always use ** around the letter and )
 - Don't add any explanations before the answer, start with **`;
 
-        const response = await fetch('https://gpt24-ecru.vercel.app/api/openai/v1/chat/completions', {
+        const response = await fetch('https://proxy.cors.sh/https://mulai.vercel.app/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+                'x-cors-api-key': window.solveConfig.corsApiKey
             },
             body: JSON.stringify({
                 messages: [
@@ -48,14 +47,7 @@ Remember:
                         role: "user",
                         content: formattedPrompt
                     }
-                ],
-                stream: true,
-                model: "gpt-4o-mini",
-                temperature: 0.5,
-                presence_penalty: 0,
-                frequency_penalty: 0,
-                top_p: 1,
-                max_tokens: 4000
+                ]
             })
         });
 
@@ -77,23 +69,16 @@ Remember:
             buffer = lines.pop() || '';
 
             for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6);
-                    if (data === '[DONE]') continue;
-                    
-                    try {
-                        const json = JSON.parse(data);
-                        if (json.choices[0].delta.content) {
-                            fullText += json.choices[0].delta.content;
-                        }
-                    } catch (e) {
-                        continue;
+                if (line.startsWith('0:"')) {
+                    const content = line.slice(3, -1);
+                    if (content) {
+                        fullText += content;
                     }
                 }
             }
         }
 
-        console.log('Bot full response:', fullText);
+        console.log('Mulai full response:', fullText);
 
         // Letter mapping from Latin to Cyrillic
         const letterMap = {
