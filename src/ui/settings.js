@@ -13,7 +13,22 @@ export class SettingsWindow {
         this.window = new UIWindow(this.i18n.t('settings.title'), this.configManager);
         this.init();
         
-        this.setupKeyboardShortcut();
+        // Check if mobile device
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (this.isMobile) {
+            this.createMobileToggleButton();
+        } else {
+            this.setupKeyboardShortcut();
+        }
+    }
+
+    createMobileToggleButton() {
+        const button = document.createElement('button');
+        button.className = 'solver-mobile-toggle';
+        button.innerHTML = '⚙️';
+        button.onclick = () => this.window.toggle();
+        document.body.appendChild(button);
     }
 
     setupKeyboardShortcut() {

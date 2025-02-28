@@ -222,4 +222,65 @@ export const styles = `
     font-size: 12px;
     color: #888;
 }
+
+/* Mobile specific styles */
+.solver-mobile-toggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 20px;
+    z-index: 9999;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.solver-mobile-toggle:hover {
+    background: #2a2a2a;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .solver-ui {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+        width: 90%;
+        max-width: 400px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .solver-ui .setting-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .solver-ui input[type="number"],
+    .solver-ui input[type="password"],
+    .solver-ui select {
+        width: 100%;
+    }
+
+    .solver-ui .button-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .solver-ui .button-row button {
+        width: 100%;
+    }
+}
 `; 
