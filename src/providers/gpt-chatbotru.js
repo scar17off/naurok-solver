@@ -4,7 +4,6 @@ export class GPTChatbotRUProvider extends BaseProvider {
     constructor() {
         super();
         this.userId = `#/chat/${Date.now()}`;
-        this.messages = []; // Store conversation history
         this.systemMessage = `You are an AI assistant helping with test questions.
 
 Instructions:
@@ -44,7 +43,7 @@ Remember:
                     }
                 ],
                 stream: true,
-                model: "chatgpt-4o-latest", // Updated model name
+                model: "chatgpt-4o-latest",
                 temperature: 0.5,
                 presence_penalty: 0,
                 frequency_penalty: 0,
