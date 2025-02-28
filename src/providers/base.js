@@ -1,7 +1,5 @@
 export class BaseProvider {
-    constructor(letters) {
-        this.letters = letters;
-    }
+    constructor() { }
 
     async getAnswer(prompt) {
         throw new Error('getAnswer must be implemented by provider');

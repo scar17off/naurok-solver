@@ -17,10 +17,6 @@ export default {
         promptCopied: "Запитання скопійовано!",
         searchGoogle: "Шукати в Google",
         provider: "Провайдер AI",
-        providers: {
-            gpt24: "GPT-24",
-            openai: "OpenAI GPT-4"
-        },
         openaiApiKey: "OpenAI API Ключ"
     }
 }; 

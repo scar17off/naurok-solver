@@ -33,8 +33,9 @@ export class SettingsWindow {
         this.window.addSelect('provider', 
             this.i18n.t('settings.provider'),
             {
-                gpt24: this.i18n.t('settings.providers.gpt24'),
-                openai: this.i18n.t('settings.providers.openai')
+                gpt24: "GPT-24",
+                openai: "OpenAI",
+                mulai: 'Mulai'
             },
             'gpt24',
             () => {

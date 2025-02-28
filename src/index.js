@@ -2,11 +2,11 @@ import { SettingsWindow } from './ui/settings';
 import { ConfigManager } from './config';
 import { GPT24Provider } from './providers/gpt24';
 import { OpenAIProvider } from './providers/openai';
+import { MulaiProvider } from './providers/mulai';
 
 (function() {
     "use strict";
 
-    const LETTERS = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя".toUpperCase().split("");
     const configManager = new ConfigManager();
     const settingsWindow = new SettingsWindow();
     
@@ -15,10 +15,12 @@ import { OpenAIProvider } from './providers/openai';
         const providerType = configManager.getValue('provider');
         switch (providerType) {
             case 'openai':
-                return new OpenAIProvider(LETTERS);
+                return new OpenAIProvider();
+            case 'mulai':
+                return new MulaiProvider();
             case 'gpt24':
             default:
-                return new GPT24Provider(LETTERS);
+                return new GPT24Provider();
         }
     }
 
@@ -37,13 +39,9 @@ import { OpenAIProvider } from './providers/openai';
         
         const selector = isMultipleChoice ? '.question-option-inner-multiple' : '.question-option-inner.ng-scope';
         const answersElements = Array.from(document.querySelectorAll(selector));
-        const answers = {};
-
-        answersElements.forEach((element, index) => {
-            if (index < LETTERS.length) {
-                const contentDiv = element.querySelector('.question-option-inner-content');
-                answers[LETTERS[index]] = contentDiv ? contentDiv.innerText : element.innerText;
-            }
+        const answers = answersElements.map(element => {
+            const contentDiv = element.querySelector('.question-option-inner-content');
+            return contentDiv ? contentDiv.innerText.trim() : element.innerText.trim();
         });
 
         return { 
@@ -72,15 +70,15 @@ import { OpenAIProvider } from './providers/openai';
         }
     }
 
-    async function highlightAnswer(letterOrLetters) {
+    async function highlightAnswer(answerTexts) {
         const optionsGrid = document.querySelector('.test-options-grid');
         if (!optionsGrid) return;
 
         const isMultipleChoice = document.querySelector('.question-option-inner-multiple') !== null;
         const selector = isMultipleChoice ? '.question-option-inner-multiple' : '.question-option-inner.ng-scope';
-        const options = optionsGrid.querySelectorAll(selector);
+        const options = Array.from(optionsGrid.querySelectorAll(selector));
         
-        const letters = Array.isArray(letterOrLetters) ? letterOrLetters : [letterOrLetters];
+        const answers = Array.isArray(answerTexts) ? answerTexts : [answerTexts];
 
         // Clear all previous highlights
         if (configManager.getValue('highlight')) {
@@ -89,19 +87,22 @@ import { OpenAIProvider } from './providers/openai';
             });
         }
 
-        // First highlight all answers
+        // Find and highlight matching answers
         const highlightedOptions = [];
-        for (const letter of letters) {
-            const letterIndex = LETTERS.indexOf(letter);
-            if (letterIndex !== -1 && options[letterIndex]) {
-                const option = options[letterIndex];
-                
+        for (const answerText of answers) {
+            const option = options.find(opt => {
+                const contentDiv = opt.querySelector('.question-option-inner-content');
+                const text = contentDiv ? contentDiv.innerText : opt.innerText;
+                return text.trim() === answerText.trim();
+            });
+
+            if (option) {
                 if (configManager.getValue('highlight')) {
                     option.style.backgroundColor = configManager.getValue('highlightColor');
                     highlightedOptions.push(option);
                 }
                 
-                console.log('Highlighted answer:', letter, 'at index:', letterIndex);
+                console.log('Highlighted answer:', answerText);
             }
         }
 
@@ -114,23 +115,19 @@ import { OpenAIProvider } from './providers/openai';
             }, configManager.getValue('highlightDuration'));
         }
 
-        // Then handle clicking if enabled
+        // Handle clicking if enabled
         if (configManager.getValue('autoClick')) {
             await new Promise(resolve => setTimeout(resolve, 300));
 
-            for (const letter of letters) {
-                const letterIndex = LETTERS.indexOf(letter);
-                if (letterIndex !== -1 && options[letterIndex]) {
-                    const option = options[letterIndex];
-                    const delay = configManager.getValue('useRandomDelay')
-                        ? Math.random() * (configManager.getValue('maxDelay') - configManager.getValue('minDelay')) 
-                            + configManager.getValue('minDelay')
-                        : configManager.getValue('delay');
-                    
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    option.click();
-                    console.log('Clicked answer:', letter, 'at index:', letterIndex);
-                }
+            for (const option of highlightedOptions) {
+                const delay = configManager.getValue('useRandomDelay')
+                    ? Math.random() * (configManager.getValue('maxDelay') - configManager.getValue('minDelay')) 
+                        + configManager.getValue('minDelay')
+                    : configManager.getValue('delay');
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+                option.click();
+                console.log('Clicked answer:', option.innerText);
             }
 
             if (isMultipleChoice) {
@@ -143,33 +140,59 @@ import { OpenAIProvider } from './providers/openai';
     async function processQuestion(questionData) {
         if (!questionData) return;
 
+        // Format prompt for display/copying
         let prompt = `${questionData.question}\n\n`;
-        for (const [letter, answer] of Object.entries(questionData.answers)) {
-            const cleanAnswer = answer.replace(/^[АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ]\)\s*/, '');
-            prompt += `${letter}) ${cleanAnswer}\n`;
+        for (const answer of questionData.answers) {
+            prompt += `${answer}\n`;
         }
-
         settingsWindow.setLastPrompt(prompt);
 
+        // Format prompt for AI
         let gptPrompt = `${questionData.question}\n\n`;
         gptPrompt += `Тип запитання: ${questionData.isMultipleChoice ? 'множинний вибір (декілька правильних відповідей)' : 'одиночний вибір (одна правильна відповідь)'}\n\n`;
         gptPrompt += `Варіанти відповідей:\n`;
-        for (const [letter, answer] of Object.entries(questionData.answers)) {
-            const cleanAnswer = answer.replace(/^[АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ]\)\s*/, '');
-            gptPrompt += `${letter}) ${cleanAnswer}\n`;
+        for (const answer of questionData.answers) {
+            gptPrompt += `${answer}\n`;
         }
 
         try {
             const response = await provider.getAnswer(gptPrompt);
             
+            // Filter responses to only include exact matches with the answer options
             if (Array.isArray(response)) {
-                settingsWindow.setLastAnswer(response);
-                await highlightAnswer(response);
+                const validAnswers = response.filter(r => {
+                    const trimmed = r.replace(/\s+/g, ' ').trim();  // Normalize whitespace
+                    const isValid = questionData.answers.includes(trimmed);
+                    return isValid;
+                });
+                if (validAnswers.length > 0) {
+                    settingsWindow.setLastAnswer(validAnswers);
+                    await highlightAnswer(validAnswers);
+                } else {
+                    console.log('No valid answers found in array response');
+                }
             } else {
-                const answer = response.replace(/[^АБВГҐДЕЄЖЗИІЇЙ��ЛМНОПРСТУФХЦЧШЩЬЮЯ]/g, '').trim();
-                if (LETTERS.includes(answer)) {
-                    settingsWindow.setLastAnswer(answer);
-                    await highlightAnswer(answer);
+                console.log('Processing single answer...');
+                const trimmedResponse = response.replace(/\s+/g, ' ').trim();  // Normalize whitespace
+                console.log('Trimmed response:', JSON.stringify(trimmedResponse));
+                console.log('Available answers:', questionData.answers.map(a => JSON.stringify(a)));
+                const isValid = questionData.answers.includes(trimmedResponse);
+                console.log(`Checking answer "${trimmedResponse}": ${isValid ? 'valid' : 'invalid'}`);
+                if (isValid) {
+                    settingsWindow.setLastAnswer(trimmedResponse);
+                    await highlightAnswer(trimmedResponse);
+                } else {
+                    console.log('No valid answer found in single response');
+                    // Try fuzzy matching as fallback
+                    const matchingAnswer = questionData.answers.find(a => 
+                        a.toLowerCase().includes(trimmedResponse.toLowerCase()) ||
+                        trimmedResponse.toLowerCase().includes(a.toLowerCase())
+                    );
+                    if (matchingAnswer) {
+                        console.log('Found fuzzy match:', matchingAnswer);
+                        settingsWindow.setLastAnswer(matchingAnswer);
+                        await highlightAnswer(matchingAnswer);
+                    }
                 }
             }
         } catch (error) {
