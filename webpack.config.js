@@ -8,6 +8,7 @@ const userScriptHeader = `// ==UserScript==
 // @description  Solves Naurok questions
 // @author       scar17off
 // @match        https://naurok.com.ua/test/*
+// @exclude      https://naurok.com.ua/test/complete/*
 // @icon         https://naurok.com.ua/favicon.ico
 // @grant        none
 // ==/UserScript==
